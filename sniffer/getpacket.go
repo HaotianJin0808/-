@@ -30,10 +30,10 @@ func main() {
 	// Use the handle as a packet source to process all packets
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 	//fmt.Println("packetSource:", packetSource)
-	//for packet := range packetSource.Packets() {
-	//	// Process packet here
-	//	fmt.Println(packet.String())
-	//}
+	for packet := range packetSource.Packets() {
+		// Process packet here
+		fmt.Println(packet.String())
+	}
 
 	router := gin.Default()
 	router.GET("/", func(c *gin.Context) {
