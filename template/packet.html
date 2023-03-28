@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style type="text/css">
+        div
+        {
+            background-color:white;
+            width:30%;
+            height:120px;
+            overflow: scroll;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+<!--{{range $index,$value := .frameContent}}-->
+<!--<p>{{$index}} : {{$value}} </p>-->
+<!--{{end}}-->
+
+<div>
+    Time:{{.curFrameContent.FrameNum}}<br>
+    Source:{{.curFrameContent.SourceAddress}}<br>
+    Destination:{{.curFrameContent.DestinationAddress}}<br>
+    Protocol:{{.curFrameContent.Protocol}}<br>
+</div>
+<div>
+
+    链路层：<br>
+    Destination:{{.curFrameContent.LinkLayerContent.Destination}}<br>
+    Source:{{.curFrameContent.LinkLayerContent.Source}}<br>
+    Type:{{.curFrameContent.LinkLayerContent.Type}}<br>
+    网络层：<br>
+    {{if eq .curFrameContent.NetworkProtocol "ipv4"}}
+    ipv4:<br>
+    ProtocolVersion:{{.curFrameContent.NetworkIPv4Content.ProtocolVersion}}<br>
+    HeaderLength:{{.curFrameContent.NetworkIPv4Content.HeaderLength}}<br>
+    TotalLength:{{.curFrameContent.NetworkIPv4Content.TotalLength}}<br>
+    Identification:{{.curFrameContent.NetworkIPv4Content.Identification}}<br>
+    Flags:{{.curFrameContent.NetworkIPv4Content.Flags}}<br>
+    FragmentOffset:{{.curFrameContent.NetworkIPv4Content.FragmentOffset}}<br>
+    TimeToLive:{{.curFrameContent.NetworkIPv4Content.TimeToLive}}<br>
+    Protocol:{{.curFrameContent.NetworkIPv4Content.Protocol}}<br>
+    HeaderCheckSum:{{.curFrameContent.NetworkIPv4Content.HeaderCheckSum}}<br>
+    SourceAddress:{{.curFrameContent.NetworkIPv4Content.SourceAddress}}<br>
+    DestinationAddress:{{.curFrameContent.NetworkIPv4Content.DestinationAddress}}<br>
+    {{else if eq .curFrameContent.NetworkProtocol "ipv6"}}
+
+    ipv6:<br>
+    ProtocolVersion:{{.curFrameContent.NetworkIPv6Content.ProtocolVersion}}<br>
+    TrafficClass:{{.curFrameContent.NetworkIPv6Content.TrafficClass}}<br>
+    FlowLabel:{{.curFrameContent.NetworkIPv6Content.FlowLabel}}<br>
+    PayloadLength:{{.curFrameContent.NetworkIPv6Content.PayloadLength}}<br>
+    NextHeader:{{.curFrameContent.NetworkIPv6Content.NextHeader}}<br>
+    HopLimit:{{.curFrameContent.NetworkIPv6Content.HopLimit}}<br>
+    SourceAddress:{{.curFrameContent.NetworkIPv6Content.SourceAddress}}<br>
+    DestinationAddress:{{.curFrameContent.NetworkIPv6Content.DestinationAddress}}<br>
+
+    {{end}}
+    传输层：<br>
+    {{if eq .curFrameContent.TransportProtocol "TCP"}}
+    TCP:<br>
+    SourcePort:{{.curFrameContent.TransportTCPContent.SourcePort}}<br>
+    DestinationPort:{{.curFrameContent.TransportTCPContent.DestinationPort}}<br>
+    SeqNumber:{{.curFrameContent.TransportTCPContent.SeqNumber}}<br>
+    AckNumber:{{.curFrameContent.TransportTCPContent.AckNumber}}<br>
+    HeaderLength:{{.curFrameContent.TransportTCPContent.HeaderLength}}<br>
+    Flags:{{.curFrameContent.TransportTCPContent.Flags}}<br>
+    Window:{{.curFrameContent.TransportTCPContent.Window}}<br>
+    CheckSum:{{.curFrameContent.TransportTCPContent.CheckSum}}<br>
+    UrgentPointer:{{.curFrameContent.TransportTCPContent.UrgentPointer}}<br>
+    {{else if eq .curFrameContent.TransportProtocol "UDP"}}
+    UDP:<br>
+    SourcePort:{{.curFrameContent.TransportUDPContent.SourcePort}}<br>
+    DestinationPort:{{.curFrameContent.TransportUDPContent.DestinationPort}}<br>
+    Length:{{.curFrameContent.TransportUDPContent.Length}}<br>
+    CheckSum:{{.curFrameContent.TransportUDPContent.CheckSum}}<br>
+    {{end}}
+
+    应用层：<br>
+    {{if eq .curFrameContent.ApplicationProtocol "HTTP"}}
+    HTTP:<br>
+    Content:{{.curFrameContent.ApplicationHTTPContent.content}}<br>
+    {{else if eq .curFrameContent.ApplicationProtocol "DNS"}}
+    DNS:<br>
+    TransactionID:{{.curFrameContent.ApplicationDNSContent.TransactionID}}<br>
+    Flags:{{.curFrameContent.ApplicationDNSContent.Flags}}<br>
+    Questions:{{.curFrameContent.ApplicationDNSContent.Questions}}<br>
+    AnswerRRs:{{.curFrameContent.ApplicationDNSContent.AnswerRRs}}<br>
+    AuthorityRRs:{{.curFrameContent.ApplicationDNSContent.AuthorityRRs}}<br>
+    AdditionalRRs:{{.curFrameContent.ApplicationDNSContent.AdditionalRRs}}<br>
+    {{end}}
+<!--    传输层：{{.curFrameContent.TransportTCPContent}}<br>-->
+</div>
+<div>
+    报文：{{.curFrameContent.ContentsStr}}<br>
+</div>
+
+
+</body>
+</html>

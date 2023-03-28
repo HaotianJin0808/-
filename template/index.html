@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<table border="6">
+    <caption>设备信息</caption>
+    <tr>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Devices addresses</th>
+    </tr>
+    <tr>
+        <td>\Device\NPF_{18D24793-BBF7-4E96-BAAB-F709E81A0C91}</td>
+        <td>WAN Miniport (Network Monitor)</td>
+        <td>WAN Miniport (Network Monitor)</td>
+    </tr>
+    <tr>
+        <td>\Device\NPF_{DD9153D4-94B2-464C-9FF9-A073ADE51142}</td>
+        <td>WAN Miniport (IPv6)</td>
+        <td>WAN Miniport (IPv6)</td>
+    </tr>
+    <tr>
+        <td>\Device\NPF_{26E24A94-803F-4BD0-99EF-6F7C8552B133}</td>
+        <td>WAN Miniport (IP)</td>
+        <td>WAN Miniport (IP)</td>
+    </tr>
+    <tr>
+        <td>\Device\NPF_{EBDCAE80-CA6E-46A6-B1B0-93CADB73F30C}</td>
+        <td> Bluetooth Device (Personal Area Network)</td>
+        <td>Bluetooth Device (Personal Area Network)<br>
+            -IP address:  fe80::5551:85a7:171f:5976<br>
+            -Subnet mask:  ffffffffffffffff0000000000000000<br>
+            -IP address:  169.254.107.96<br>
+            -Subnet mask:  0000ffff<br>
+        </td>
+    </tr>
+    <tr>
+        <td> \Device\NPF_{E2400578-5DB9-43A8-91CE-F1506B976E2F}</td>
+        <td>Intel(R) Wireless-AC 9560</td>
+        <td>Intel(R) Wireless-AC 9560<br>
+            - IP address:  2408:8409:9000:1c4b:f93a:9e07:8d3e:fca<br>
+            - Subnet mask:  ffffffffffffffff0000000000000000<br>
+            - IP address:  2408:8409:9000:1c4b:f05a:e8f8:c669:612a<br>
+            - Subnet mask:  ffffffffffffffffffffffffffffffff<br>
+            - IP address:  fe80::52c5:827b:ef74:c09c<br>
+            - Subnet mask:  ffffffffffffffff0000000000000000<br>
+            - IP address:  192.168.218.142<br>
+            - Subnet mask:  00ffffff<br>
+        </td>
+    </tr>
+    <tr>
+        <td> \Device\NPF_{04595169-72AD-403F-8806-706F544F0CB8}</td>
+        <td>Microsoft Wi-Fi Direct Virtual Adapter #2</td>
+        <td>Microsoft Wi-Fi Direct Virtual Adapter #2<br>
+            - IP address:  fe80::136e:8412:5f63:59a4<br>
+            - Subnet mask:  ffffffffffffffff0000000000000000<br>
+            - IP address:  169.254.249.13<br>
+            - Subnet mask:  0000ffff<br>
+
+        </td>
+    </tr>
+    <tr>
+        <td>\Device\NPF_{F1103DAE-E4B4-4FB4-8A01-1822772CEE9A}</td>
+        <td>Microsoft Wi-Fi Direct Virtual Adapter</td>
+        <td> Microsoft Wi-Fi Direct Virtual Adapter<br>
+            - IP address:  fe80::ce5a:9db9:9da4:4e38<br>
+            - Subnet mask:  ffffffffffffffff0000000000000000<br>
+            - IP address:  169.254.106.106<br>
+            - Subnet mask:  0000ffff<br>
+
+        </td>
+    </tr>
+</table>
+选择设备：<input type="text" name="choose" value="">
+<form action="http://localhost:8080/sniffer" method="post">
+    选择协议：<input type="text" name="protocol" value="all"><br>
+    <input type="submit" value="开始">
+</form>
+</body>
+</html>

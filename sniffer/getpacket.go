@@ -7,6 +7,7 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/pcap"
 	"log"
+	"net/http"
 	"strconv"
 	"time"
 )
@@ -21,15 +22,21 @@ var (
 )
 
 type totalContent struct {
-	FrameNum            int
-	LinkLayerContent    linkLayerContent
-	NetworkIPv4Content  networkIPv4Content
-	NetworkIPv6Content  networkIPv6Content
-	TransportUDPContent transportUDPContent
-	TransportTCPContent transportTCPContent
-	SourceAddress       string
-	DestinationAddress  string
-	Protocol            string
+	FrameNum               int
+	LinkLayerContent       linkLayerContent
+	NetworkProtocol        string //"ipv4";"ipv6"
+	NetworkIPv4Content     networkIPv4Content
+	NetworkIPv6Content     networkIPv6Content
+	TransportProtocol      string //"TCP";"UDP"
+	TransportUDPContent    transportUDPContent
+	TransportTCPContent    transportTCPContent
+	ApplicationProtocol    string //"HTTP";"DNS"
+	ApplicationHTTPContent applicationHTTPContent
+	ApplicationDNSContent  applicationDNSContent
+	SourceAddress          string
+	DestinationAddress     string
+	Protocol               string
+	ContentsStr            string
 }
 type networkIPv4Content struct {
 	ProtocolVersion    uint64
@@ -101,7 +108,12 @@ var totalApplicationHTTPContent []applicationHTTPContent
 
 func main() {
 	router := gin.Default()
-
+	router.LoadHTMLGlob("template/*")
+	router.GET("/index", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index.html", gin.H{
+			"msg": "加载index页面",
+		})
+	})
 	// 打开某一网络设备
 
 	handle, err = pcap.OpenLive(device, snapshot_len, promiscuous, timeout)
@@ -115,27 +127,30 @@ func main() {
 	//fmt.Println("packetSource:", packetSource)
 	num := 0
 
-	router.GET("/", func(c *gin.Context) {
+	router.POST("/sniffer", func(c *gin.Context) {
+		protocol := c.PostForm("protocol")
 		for packet := range packetSource.Packets() {
 			var curFrameContent totalContent
 			// Process packet here
 			num++
 			fmt.Println("Frame ", num)
-			curNum := "\n" + "Frame" + strconv.Itoa(num) + "\n"
-			c.String(200, curNum)
+			//curNum := "\n" + "Frame" + strconv.Itoa(num) + "\n"
+			//c.String(200, curNum)
 
 			//linkLayer
 			//fmt.Println(packet.LinkLayer().LayerType())
 			//fmt.Println(packet.LinkLayer().LayerContents())
 			linkLayerContentsStr := hex.EncodeToString(packet.LinkLayer().LayerContents())
+			curFrameContent.ContentsStr = linkLayerContentsStr
 			//fmt.Println(linkLayerContentsStr)
 			var curLinkLayerContent linkLayerContent
 			linkLayerAnalyse(linkLayerContentsStr, &curLinkLayerContent)
 			fmt.Printf("链路层报文=%+v\n", curLinkLayerContent)
 			totalLinkLayerContent = append(totalLinkLayerContent, curLinkLayerContent)
-			c.String(200, "链路层报文")
-			c.JSON(200, curLinkLayerContent)
-			c.String(200, "\n")
+			//c.String(200, "链路层报文")
+			//c.JSON(200, curLinkLayerContent)
+			//c.String(200, "\n")
+			curFrameContent.LinkLayerContent = curLinkLayerContent
 			curFrameContent.FrameNum = num
 			//
 			//fmt.Println("Destination:", linkLayerContentsStr[0:12])
@@ -144,30 +159,36 @@ func main() {
 
 			//NetworkLayer
 			//fmt.Println(packet.NetworkLayer().LayerType().String())
-			//fmt.Println(packet.NetworkLayer().LayerContents())
+			if packet.NetworkLayer() == nil {
+				continue
+			}
+			fmt.Println("网络层野生报文", packet.NetworkLayer().LayerContents())
 			networkLayerContentsStr := hex.EncodeToString(packet.NetworkLayer().LayerContents())
+			curFrameContent.ContentsStr += networkLayerContentsStr
 			//fmt.Println(networkLayerContentsStr)
 			var curNetworkIPv4Content networkIPv4Content
 			var curNetworkIPv6Content networkIPv6Content
 			var curTransportTCPContent transportTCPContent
 			var curTransportUDPContent transportUDPContent
-			c.String(200, "网络层报文")
+			//c.String(200, "网络层报文")
 			if "IPv4" == packet.NetworkLayer().LayerType().String() {
-				networkLayerIPv4Analyse(networkLayerContentsStr, &curNetworkIPv4Content)
+				networkLayerIPv4Analyse(networkLayerContentsStr, packet.NetworkLayer().LayerContents(), &curNetworkIPv4Content)
 				fmt.Printf("网络层报文=%+v\n", curNetworkIPv4Content)
 				totalNetworkIPv4Content = append(totalNetworkIPv4Content, curNetworkIPv4Content)
-				c.JSON(200, curNetworkIPv4Content)
+				//c.JSON(200, curNetworkIPv4Content)
 				curFrameContent.NetworkIPv4Content = curNetworkIPv4Content
 				curFrameContent.SourceAddress = curNetworkIPv4Content.SourceAddress
 				curFrameContent.DestinationAddress = curNetworkIPv4Content.DestinationAddress
+				curFrameContent.NetworkProtocol = "ipv4"
 			}
 			if "IPv6" == packet.NetworkLayer().LayerType().String() {
 				networkLayerIPv6Analyse(networkLayerContentsStr, &curNetworkIPv6Content)
 				fmt.Printf("网络层报文=%+v\n", curNetworkIPv6Content)
-				c.JSON(200, curNetworkIPv6Content)
+				//c.JSON(200, curNetworkIPv6Content)
 				curFrameContent.NetworkIPv6Content = curNetworkIPv6Content
 				curFrameContent.SourceAddress = curNetworkIPv6Content.SourceAddress
 				curFrameContent.DestinationAddress = curNetworkIPv6Content.DestinationAddress
+				curFrameContent.NetworkProtocol = "ipv6"
 				//if "TCP(6)" == curNetworkIPv6Content.NextHeader { //传输层为TCP协议
 				//	transportLayerContentsStr := hex.EncodeToString(packet.TransportLayer().LayerContents())
 				//
@@ -202,17 +223,19 @@ func main() {
 				//	}
 				//}
 			}
-			c.String(200, "\n")
+			//c.String(200, "\n")
 			if "TCP(6)" == curNetworkIPv4Content.Protocol || "TCP(6)" == curNetworkIPv6Content.NextHeader {
 				//传输层为TCP协议
-				c.String(200, "传输层报文")
+				//c.String(200, "传输层报文")
 				transportLayerContentsStr := hex.EncodeToString(packet.TransportLayer().LayerContents())
 
+				curFrameContent.ContentsStr += transportLayerContentsStr
 				transportLayerTCPAnalyse(transportLayerContentsStr, &curTransportTCPContent)
 				fmt.Printf("传输层TCP报文=%+v\n", curTransportTCPContent)
 				totalTransportTCPContent = append(totalTransportTCPContent, curTransportTCPContent)
-				c.JSON(200, curTransportTCPContent)
+				//c.JSON(200, curTransportTCPContent)
 				curFrameContent.TransportTCPContent = curTransportTCPContent
+				curFrameContent.TransportProtocol = "TCP"
 				curFrameContent.Protocol = "TCP"
 				//if curTransportTCPContent.SourcePort == 53 || curTransportTCPContent.DestinationPort == 53 {
 				//	//DNS报文
@@ -225,14 +248,15 @@ func main() {
 				//}
 			} else if "UDP(17)" == curNetworkIPv4Content.Protocol || "UDP(17)" == curNetworkIPv6Content.NextHeader {
 				//传输层为UDP协议
-				c.String(200, "传输层报文")
+				//c.String(200, "传输层报文")
 				transportLayerContentsStr := hex.EncodeToString(packet.TransportLayer().LayerContents())
-
+				curFrameContent.ContentsStr += transportLayerContentsStr
 				transportLayerUDPAnalyse(transportLayerContentsStr, &curTransportUDPContent)
 				fmt.Printf("传输层UDP报文=%+v\n", curTransportUDPContent)
 				totalTransportUDPContent = append(totalTransportUDPContent, curTransportUDPContent)
-				c.JSON(200, curTransportUDPContent)
+				//c.JSON(200, curTransportUDPContent)
 				curFrameContent.TransportUDPContent = curTransportUDPContent
+				curFrameContent.TransportProtocol = "UDP"
 				curFrameContent.Protocol = "UDP"
 				//if curTransportUDPContent.SourcePort == 53 || curTransportUDPContent.DestinationPort == 53 {
 				//	//DNS报文
@@ -244,24 +268,43 @@ func main() {
 				//	c.JSON(200, curApplicationDNSContent)
 				//}
 			}
-			c.String(200, "\n"+"总报文信息")
-			c.JSON(200, curFrameContent)
-			frameContent = append(frameContent, curFrameContent)
+			//c.String(200, "\n"+"总报文信息")
+			//c.JSON(200, curFrameContent)
+
+			//c.HTML(200, "packet.html", gin.H{
+			//	"curFrameContent": curFrameContent,
+			//})
 			if packet.ApplicationLayer() == nil {
-				fmt.Println("无应用层报文")
+				continue
 			} else {
-				fmt.Println("应用层野生报文：", packet.ApplicationLayer().LayerContents())
-				//if curTransportTCPContent.SourcePort == 53 || curTransportTCPContent.DestinationPort == 53 ||
-				//	curTransportUDPContent.SourcePort == 53 || curTransportUDPContent.DestinationPort == 53 {
-				//	//DNS报文
-				//	applicationLayerContentStr := hex.EncodeToString(packet.ApplicationLayer().LayerContents())
-				//	var curApplicationDNSContent applicationDNSContent
-				//	applicationLayerDNSAnalyse(applicationLayerContentStr, &curApplicationDNSContent)
-				//	fmt.Printf("应用层DNS报文=%+v\n", curApplicationDNSContent)
-				//	totalApplicationDNSContent = append(totalApplicationDNSContent, curApplicationDNSContent)
-				//	c.String(200, "应用层DNS报文：")
-				//	c.JSON(200, curApplicationDNSContent)
-				//}
+				//fmt.Println("应用层野生报文：", packet.ApplicationLayer().LayerContents())
+				if curTransportTCPContent.SourcePort == 80 || curTransportTCPContent.DestinationPort == 80 ||
+					curTransportUDPContent.SourcePort == 80 || curTransportUDPContent.DestinationPort == 80 {
+					applicationLayerContentStr := hex.EncodeToString(packet.ApplicationLayer().LayerContents())
+					fmt.Println("HTTP报文：", applicationLayerContentStr)
+
+					var curApplicationHTTPContent applicationHTTPContent
+					applicationLayerHTTPAnalyse(applicationLayerContentStr, &curApplicationHTTPContent)
+					totalApplicationHTTPContent = append(totalApplicationHTTPContent, curApplicationHTTPContent)
+					curFrameContent.Protocol = "HTTP"
+					curFrameContent.ApplicationProtocol = "HTTP"
+					curFrameContent.ApplicationHTTPContent = curApplicationHTTPContent
+				} else if curTransportTCPContent.SourcePort == 53 || curTransportTCPContent.DestinationPort == 53 ||
+					curTransportUDPContent.SourcePort == 53 || curTransportUDPContent.DestinationPort == 53 {
+					//DNS报文
+					applicationLayerContentStr := hex.EncodeToString(packet.ApplicationLayer().LayerContents())
+					fmt.Println("应用层16进制报文", applicationLayerContentStr)
+
+					var curApplicationDNSContent applicationDNSContent
+					applicationLayerDNSAnalyse(applicationLayerContentStr, &curApplicationDNSContent)
+					fmt.Printf("应用层DNS报文=%+v\n", curApplicationDNSContent)
+					totalApplicationDNSContent = append(totalApplicationDNSContent, curApplicationDNSContent)
+					curFrameContent.Protocol = "DNS"
+					curFrameContent.ApplicationProtocol = "DNS"
+					curFrameContent.ApplicationDNSContent = curApplicationDNSContent
+					//c.String(200, "应用层DNS报文：")
+					//c.JSON(200, curApplicationDNSContent)
+				}
 			}
 
 			//fmt.Println("Protocol Version:", curNetworkContent.ProtocolVersion)
@@ -280,7 +323,18 @@ func main() {
 			//	//fmt.Printf("传输层报文=%+v\n", curTransportTCPContent)
 			//}
 
-			//ApplicationLayer
+			frameContent = append(frameContent, curFrameContent)
+			if "all" == protocol {
+				c.HTML(200, "packet.html", gin.H{
+					"curFrameContent": curFrameContent,
+				})
+			} else if curFrameContent.Protocol == protocol {
+				c.HTML(200, "packet.html", gin.H{
+					"curFrameContent": curFrameContent,
+				})
+			} else {
+				continue
+			}
 
 		}
 
@@ -295,7 +349,7 @@ func linkLayerAnalyse(linkLayerContentsStr string, c *linkLayerContent) {
 		linkLayerContentsStr[18:20] + ":" + linkLayerContentsStr[20:22] + ":" + linkLayerContentsStr[22:24]
 	c.Type = linkLayerContentsStr[24:28]
 }
-func networkLayerIPv4Analyse(networkLayerContentsStr string, c *networkIPv4Content) {
+func networkLayerIPv4Analyse(networkLayerContentsStr string, networkLayerContent []byte, c *networkIPv4Content) {
 	c.ProtocolVersion, _ = strconv.ParseUint(string(networkLayerContentsStr[0]), 16, 0)
 	c.HeaderLength, _ = strconv.ParseUint(string(networkLayerContentsStr[1]), 16, 0)
 	c.TotalLength, _ = strconv.ParseUint(networkLayerContentsStr[4:8], 16, 0)
@@ -323,8 +377,14 @@ func networkLayerIPv4Analyse(networkLayerContentsStr string, c *networkIPv4Conte
 		c.Protocol = "不常见，待补充"
 	}
 	c.HeaderCheckSum, _ = strconv.ParseUint(string(networkLayerContentsStr[20:24]), 16, 0)
-	c.SourceAddress = networkLayerContentsStr[24:32]
-	c.DestinationAddress = networkLayerContentsStr[32:40]
+	c.SourceAddress = hexToDec(networkLayerContentsStr[24:26]) + ":" + hexToDec(networkLayerContentsStr[26:28]) +
+		":" + hexToDec(networkLayerContentsStr[28:30]) + ":" + hexToDec(networkLayerContentsStr[30:32])
+	c.DestinationAddress = hexToDec(networkLayerContentsStr[32:34]) + ":" + hexToDec(networkLayerContentsStr[34:36]) +
+		":" + hexToDec(networkLayerContentsStr[36:38]) + ":" + hexToDec(networkLayerContentsStr[38:40])
+}
+func hexToDec(a string) (b string) {
+	n, _ := strconv.ParseInt(a, 16, 0)
+	return strconv.FormatInt(n, 10)
 }
 func networkLayerIPv6Analyse(networkLayerContentsStr string, c *networkIPv6Content) {
 	c.ProtocolVersion, _ = strconv.ParseUint(string(networkLayerContentsStr[0]), 16, 0)
@@ -383,4 +443,11 @@ func applicationLayerDNSAnalyse(applicationLayerContentsStr string, c *applicati
 	c.AnswerRRs, _ = strconv.ParseUint(string(applicationLayerContentsStr[12:16]), 16, 0)
 	c.AuthorityRRs, _ = strconv.ParseUint(string(applicationLayerContentsStr[16:20]), 16, 0)
 	c.AdditionalRRs, _ = strconv.ParseUint(string(applicationLayerContentsStr[20:24]), 16, 0)
+}
+func applicationLayerHTTPAnalyse(applicationLayerContentsStr string, c *applicationHTTPContent) {
+	for i := 0; i < len(applicationLayerContentsStr)-2; i = i + 2 {
+		tmpHexStr := applicationLayerContentsStr[i : i+2]
+		tmpDecNum, _ := strconv.ParseInt(tmpHexStr, 16, 0)
+		c.content += string(tmpDecNum)
+	}
 }
