@@ -15,7 +15,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	// 打印设备信息
 	var deviceName []string
 	fmt.Println("Devices found:")
