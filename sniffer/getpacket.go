@@ -120,7 +120,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	fmt.Println("Name:", device)
 	defer handle.Close()
 	// Use the handle as a packet source to process all packets
