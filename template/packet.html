@@ -7,7 +7,7 @@
         div
         {
             background-color:white;
-            width:30%;
+            width:33%;
             height:120px;
             overflow: scroll;
             display: inline-block;
@@ -20,7 +20,7 @@
 <!--{{end}}-->
 
 <div>
-    Time:{{.curFrameContent.FrameNum}}<br>
+    Time:{{.curFrameContent.FrameTime}}<br>
     Source:{{.curFrameContent.SourceAddress}}<br>
     Destination:{{.curFrameContent.DestinationAddress}}<br>
     Protocol:{{.curFrameContent.Protocol}}<br>
@@ -98,6 +98,6 @@
     报文：{{.curFrameContent.ContentsStr}}<br>
 </div>
 
-
+<hr/>
 </body>
 </html>

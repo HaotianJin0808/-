@@ -22,6 +22,7 @@ var (
 )
 
 type totalContent struct {
+	FrameTime              string
 	FrameNum               int
 	LinkLayerContent       linkLayerContent
 	NetworkProtocol        string //"ipv4";"ipv6"
@@ -129,8 +130,12 @@ func main() {
 
 	router.POST("/sniffer", func(c *gin.Context) {
 		protocol := c.PostForm("protocol")
+		startTime := time.Now() //
 		for packet := range packetSource.Packets() {
+			curTime := time.Now()
 			var curFrameContent totalContent
+			curFrameContent.FrameTime = curTime.Sub(startTime).String()
+			fmt.Println("帧时间：", curFrameContent.FrameTime)
 			// Process packet here
 			num++
 			fmt.Println("Frame ", num)
@@ -294,7 +299,9 @@ func main() {
 					//DNS报文
 					applicationLayerContentStr := hex.EncodeToString(packet.ApplicationLayer().LayerContents())
 					fmt.Println("应用层16进制报文", applicationLayerContentStr)
-
+					if len(applicationLayerContentStr) < 12 {
+						continue
+					}
 					var curApplicationDNSContent applicationDNSContent
 					applicationLayerDNSAnalyse(applicationLayerContentStr, &curApplicationDNSContent)
 					fmt.Printf("应用层DNS报文=%+v\n", curApplicationDNSContent)
@@ -359,6 +366,8 @@ func networkLayerIPv4Analyse(networkLayerContentsStr string, networkLayerContent
 		c.Flags = "Don‘t Fragment"
 	case "2":
 		c.Flags = "More Fragments"
+	case "0":
+		c.Flags = "Last Fragment"
 	default:
 		c.Flags = "我也不知道"
 	}
