@@ -1,0 +1,23 @@
+{
+  "source": "anquanke",
+  "time_window": {
+    "start": "2026-02-17 03:08:46",
+    "end": "2026-03-04 03:08:46",
+    "days": 15
+  },
+  "total_seed_posts": 71,
+  "title_matched_candidates": 4,
+  "matched_in_15_days": 2,
+  "items": [
+    {
+      "title": "MS-Agent存在未修复漏洞（CVE-2026-2256），攻击者可劫持AI助手",
+      "url": "https://www.anquanke.com/post/id/314985",
+      "published_at": "2026-03-04 10:35:26"
+    },
+    {
+      "title": "恶意网站利用OpenClaw零点击漏洞可劫持开发者AI智能体",
+      "url": "https://www.anquanke.com/post/id/314922",
+      "published_at": "2026-03-03 09:59:34"
+    }
+  ]
+}

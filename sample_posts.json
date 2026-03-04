@@ -1,0 +1,29 @@
+[
+  {
+    "title": "某团队分享：Prompt Injection 让内部知识库越权泄露",
+    "selftext": "攻击者通过提示词注入绕过系统策略，诱导模型输出敏感文档片段。",
+    "author": "sec_observer",
+    "score": 35,
+    "num_comments": 12,
+    "created_utc": 1730800000,
+    "permalink": "https://example.cn/post/1"
+  },
+  {
+    "title": "AI客服被钓鱼话术利用，触发恶意自动化工单",
+    "selftext": "讨论了agent工具调用权限过大导致的风险，建议二次确认。",
+    "author": "risk_team",
+    "score": 22,
+    "num_comments": 8,
+    "created_utc": 1730886400,
+    "permalink": "https://example.cn/post/2"
+  },
+  {
+    "title": "分享一次模型对齐失败案例",
+    "selftext": "在高压测试下模型给出了unsafe建议，需强化safety guardrail。",
+    "author": "ai_audit",
+    "score": 18,
+    "num_comments": 5,
+    "created_utc": 1730972800,
+    "permalink": "https://example.cn/post/3"
+  }
+]

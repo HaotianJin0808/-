@@ -1,0 +1,13 @@
+{
+  "source": "https://www.anquanke.com/",
+  "matching_logic": "(LLM关键词 AND 安全漏洞关键词) OR 特殊短语(prompt injection/提示注入/jailbreak)",
+  "total_collected": 42,
+  "matched_count": 1,
+  "matched_items": [
+    {
+      "title": "GitHub Copilot遭被动提示注入攻击 可实现代码仓库完全接管",
+      "url": "https://www.anquanke.com/post/id/314882",
+      "matched": true
+    }
+  ]
+}
